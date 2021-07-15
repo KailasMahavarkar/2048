@@ -1,6 +1,12 @@
 from typing import Union, List, Tuple
 import random
 
+def fillMatrix(array):
+    available = [(x, y) for x, singlelist in enumerate(array) for y, item in enumerate(singlelist) if item == 0]
+    if len(available) > 0:
+        x, y = random.choice(available)
+        array[x][y] = random.choice([2, 4])
+    return array
 
 def zeroCheck(array, move):
     array = list(filter(lambda a: a != 0, array))
@@ -11,10 +17,9 @@ def zeroCheck(array, move):
     return array
 
 
-def state(array: Union[Tuple[int, int, int, int], List[int]], move='right'):
-    # [2, 4, 8, 16] = [2, 4, 8, 16]
+def state(array: Union[Tuple[int, int, int, int], List[int]], move='right') -> Union[List[int]]:
     if len(list(set(array))) == 4:
-        return array
+        return zeroCheck(array=array, move=move)
 
     # default zero check
     array = zeroCheck(array=array, move=move)
@@ -69,19 +74,43 @@ def state(array: Union[Tuple[int, int, int, int], List[int]], move='right'):
             array = [array[0], array[1] * 2, array[3], 0]
         return zeroCheck(array=array, move=move)
 
+
     # ----- third and fourth is same -----
     # right -> [8, 4, 2, 2] => [0, x0, x1, x2||x3*2] => [0, 8, 4, 4]
     # left  -> [8, 4, 2, 2] => [x0, x1, x2||x3*2, 0] => [8, 4, 4, 0]
     if array[2] == array[3] and array[1] != array[2]:
+
         if move == 'right':
             array = [0, array[0], array[1], array[2] * 2]
         elif move == 'left':
             array = [array[0], array[1], array[2] * 2, 0]
+
+        return zeroCheck(array=array, move=move)
+
+
+    # ----- but second and third are not same
+    if array[1] != array[2] and array[2] != array[3]:
+        print('ran 1 ', array)
         return zeroCheck(array=array, move=move)
 
 
 def randomstate():
     return [[random.choice([2, 2, 0]) for _ in range(4)] for _ in range(4)]
+
+
+def gameOver(array):
+    arrayCopy = array.copy()
+
+    def inner(mode):
+        check = setmode(array=arrayCopy, mode=mode)
+        if check == arrayCopy:
+            return True
+        return False
+
+    if all([inner('up'), inner('down'), inner('left'), inner('right')]):
+        return True
+    return False
+
 
 
 def setmode(array, mode):
@@ -91,7 +120,7 @@ def setmode(array, mode):
             myArrayUP = [state(array=x, move='left') for x in arrayVertical]
             return [[myArrayUP[x][y] for x in range(4)] for y in range(4)]
         elif mode == 'down':
-            myArrayDown = [state(array=x, move='down') for x in arrayVertical]
+            myArrayDown = [state(array=x, move='right') for x in arrayVertical]
             return [[myArrayDown[x][y] for x in range(4)] for y in range(4)]
     elif mode == 'left':
         return [state(array=x, move='left') for x in array]
